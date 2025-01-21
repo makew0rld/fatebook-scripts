@@ -68,44 +68,6 @@ for i in range(len(scores)):
 
 def rolling_average(days: int) -> List[Tuple[datetime, float]]:
     rolling_averages: List[Tuple[datetime, float]] = []
-    # end = the beginning of the day after the first resolution
-    # This means the first average window will only include predictions made in the first day
-    end = (resolution_times[0] + timedelta(days=1)).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
-    start = end - timedelta(days=days)
-    start_i = 0  # In resolution_times
-
-    # Iterate over time until the last data point
-    while end < resolution_times[-1] + timedelta(days=1):
-        # Gather scores for this window
-        tmp_scores = []
-        for i, (resolution_time, score) in enumerate(
-            zip(resolution_times[start_i:], scores[start_i:])
-        ):
-            if resolution_time < start:
-                # For the next time the average is calculated (next when loop), skip over these resolutions that are too old
-                start_i += i + 1
-                continue
-            if resolution_time > end:
-                # Now outside the window
-                break
-            tmp_scores.append(score)
-
-        if len(tmp_scores) == 0:
-            # No data for this window
-            continue
-        # Calculate average for this window and move on
-        rolling_averages.append((end, sum(tmp_scores) / len(tmp_scores)))
-        start += timedelta(days=1)
-        end += timedelta(days=1)
-
-    return rolling_averages
-
-
-# Second version of the function that updates only when a question is resolved, looking X days back at that point
-def rolling_average2(days: int) -> List[Tuple[datetime, float]]:
-    rolling_averages: List[Tuple[datetime, float]] = []
     for end_resolution_time in resolution_times:
         start = end_resolution_time - timedelta(days=days)
         tmp_scores = []
@@ -121,8 +83,8 @@ def rolling_average2(days: int) -> List[Tuple[datetime, float]]:
     return rolling_averages
 
 
-three_month = rolling_average2(91)
-one_month = rolling_average2(30)
+three_month = rolling_average(91)
+one_month = rolling_average(30)
 
 fig, ax = plt.subplots()
 ax.set_ylim(0, 2)
