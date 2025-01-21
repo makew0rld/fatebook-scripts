@@ -1,7 +1,7 @@
 import sys
 import csv
 from datetime import datetime, timedelta, timezone
-from typing import List, Tuple
+from typing import List, NamedTuple, Tuple
 import matplotlib.pyplot as plt
 
 HEADERS = [
@@ -30,11 +30,15 @@ def parse_time(ts: str) -> datetime:
     return datetime.strptime(ts, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
 
 
+class Question(NamedTuple):
+    created_at: datetime
+    resolved_at: datetime
+    score: float
+
+
+questions: List[Question] = []
 # Keep track of questions that have been seen
 seen_ids = set()
-# For each question
-scores: List[float] = []
-resolution_times: List[datetime] = []
 
 with open(sys.argv[1]) as f:
     reader = csv.reader(f)
@@ -53,34 +57,33 @@ with open(sys.argv[1]) as f:
             # Question "ID" is combo of title and creation time
             continue
         seen_ids.add(row[0] + row[6])
-        scores.append(float(row[10]))
-        resolution_times.append(parse_time(row[9]))
+        questions.append(
+            Question(parse_time(row[6]), parse_time(row[9]), float(row[10]))
+        )
 
-# Sort the data by resolution time
-resolution_times, scores = zip(*sorted(zip(resolution_times, scores)))
+# Sort the data by creation time
+questions.sort(key=lambda q: q.created_at)
 
 # Calculate the averages now that the data is sorted
 
 # Average of scores for each question and all preceding ones
 total_averages = []
-for i in range(len(scores)):
-    total_averages.append(sum(scores[: i + 1]) / (i + 1))
+for i in range(len(questions)):
+    total_averages.append(sum([q.score for q in questions[: i + 1]]) / (i + 1))
 
 
 def rolling_average(days: int) -> List[Tuple[datetime, float]]:
     rolling_averages: List[Tuple[datetime, float]] = []
-    for end_resolution_time in resolution_times:
-        start = end_resolution_time - timedelta(days=days)
+    for end_creation_time in [q.created_at for q in questions]:
+        start = end_creation_time - timedelta(days=days)
         tmp_scores = []
-        for score, resolution_time in zip(scores, resolution_times):
-            if resolution_time <= start:
+        for creation_time, _, score in questions:
+            if creation_time <= start:
                 continue
-            if resolution_time > end_resolution_time:
+            if creation_time > end_creation_time:
                 break
             tmp_scores.append(score)
-        rolling_averages.append(
-            (end_resolution_time, sum(tmp_scores) / len(tmp_scores))
-        )
+        rolling_averages.append((end_creation_time, sum(tmp_scores) / len(tmp_scores)))
     return rolling_averages
 
 
@@ -89,15 +92,6 @@ one_month = rolling_average(30)
 
 fig, ax = plt.subplots()
 ax.set_ylim(0, 2)
-
-# ax.plot(resolution_times, scores, label="question scores", marker="o", markersize=3)  # type: ignore
-ax.scatter(
-    resolution_times,  # type: ignore
-    scores,
-    label=f"question scores (total: {len(scores)})",
-    marker="o",
-    s=5,
-)
 
 line_kwargs = {"marker": None, "markersize": 3}
 # ax.plot(
@@ -111,10 +105,22 @@ ax.plot(
     **line_kwargs,
 )
 ax.plot(
-    resolution_times,  # type: ignore
+    [q.created_at for q in questions],  # type: ignore
     total_averages,
     label=f"total average (latest: {total_averages[-1]:.2f})",
     **line_kwargs,
 )
+
+# Sort the data by resolution time, to graph individual question scores
+questions.sort(key=lambda q: q.resolved_at)
+
+ax.scatter(
+    [q.resolved_at for q in questions],  # type: ignore
+    [q.score for q in questions],
+    label=f"question scores (total: {len(questions)})",
+    marker="o",
+    s=5,
+)
+
 plt.legend()
 plt.show()
