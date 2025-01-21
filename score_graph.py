@@ -21,6 +21,7 @@ HEADERS = [
     "Question shared with",
     "Question shared publicly",
     "Question comments",
+    "Question tags",
 ]
 
 
