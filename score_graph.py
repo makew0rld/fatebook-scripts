@@ -91,7 +91,13 @@ fig, ax = plt.subplots()
 ax.set_ylim(0, 2)
 
 # ax.plot(resolution_times, scores, label="question scores", marker="o", markersize=3)  # type: ignore
-ax.scatter(resolution_times, scores, label="question scores", marker="o", s=5)  # type: ignore
+ax.scatter(
+    resolution_times,  # type: ignore
+    scores,
+    label=f"question scores (total: {len(scores)})",
+    marker="o",
+    s=5,
+)
 
 line_kwargs = {"marker": None, "markersize": 3}
 # ax.plot(
@@ -101,13 +107,13 @@ line_kwargs = {"marker": None, "markersize": 3}
 # )
 ax.plot(
     *zip(*three_month),
-    label=f"3-month rolling average ({three_month[-1][1]:.2f})",
+    label=f"3-month rolling average (latest: {three_month[-1][1]:.2f})",
     **line_kwargs,
 )
 ax.plot(
     resolution_times,  # type: ignore
     total_averages,
-    label=f"total average ({total_averages[-1]:.2f})",
+    label=f"total average (latest: {total_averages[-1]:.2f})",
     **line_kwargs,
 )
 plt.legend()
