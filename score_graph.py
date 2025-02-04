@@ -54,6 +54,8 @@ with open(sys.argv[1]) as f:
         #     continue
         if not row[8]:  # No resolution
             continue
+        if row[8] == "AMBIGUOUS":
+            continue
         if row[0] + row[6] in seen_ids:
             # Question "ID" is combo of title and creation time
             continue
