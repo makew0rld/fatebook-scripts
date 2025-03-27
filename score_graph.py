@@ -41,7 +41,7 @@ questions: List[Question] = []
 # Keep track of questions that have been seen
 seen_ids = set()
 
-with open(sys.argv[1]) as f:
+with open(sys.argv[2]) as f:
     reader = csv.reader(f)
     headers = next(reader)
     if headers != HEADERS:
@@ -50,8 +50,8 @@ with open(sys.argv[1]) as f:
         )
     for row in reader:
         # Skip questions not by me
-        # if row[2] != "<name>" or row[5] != "<name>":
-        #     continue
+        if row[2] != sys.argv[1] or row[5] != sys.argv[1]:
+            continue
         if not row[8]:  # No resolution
             continue
         if row[8] == "AMBIGUOUS":

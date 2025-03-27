@@ -7,9 +7,11 @@ Run scripts with `uv run <script>`.
 
 Currently there's only one script, `score_graph.py`. It creates a graph of how your Brier score
 has changed over time when provided with a CSV export from Fatebook.
+Only personal questions are considered.
 
-```
-$ uv run score_graph.py path/to/fatebook-forecasts.csv
+```bash
+# First arg is your Fatebook username, you can see it in the CSV
+$ uv run score_graph.py 'John Smith' path/to/fatebook-forecasts.csv
 ```
 
 ## License
